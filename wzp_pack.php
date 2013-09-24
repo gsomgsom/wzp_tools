@@ -137,18 +137,20 @@ foreach ($fnames as $fname) {
 	$entry1 .= pack("v", strlen($fname));    // length of filename
 	$entry1 .= $fname;
 
-	if (($is_file) && (strlen($contents))) {
-		$packed_contents = gzcompress($contents, $method);
-	}
-
-	// Chunks table (TODO: split into 16384-bytes chunks)
+	// Chunks table
+	$chunk_size = 1 << 14; // 16384
 	$chunks = 0;
 	$chinks_table = "";
-	if (strlen($contents) > 0) {
-		$chunks = 1;
-		$chinks_table .= pack("V", strlen($contents));
-		$chinks_table .= pack("V", strlen($packed_contents));
-		$chinks_table .= pack("V", $flag);
+	if (($is_file) && (strlen($contents))) {
+		$chunks = ceil(strlen($contents) / $chunk_size);
+		for ($i = 0; $i < $chunks; $i++) {
+			$unpacked_chunk = substr($contents, $i * $chunk_size, $chunk_size);
+			$packed_chunk = gzcompress($unpacked_chunk, $method);
+			$chinks_table .= pack("V", strlen($unpacked_chunk));
+			$chinks_table .= pack("V", strlen($packed_chunk));
+			$chinks_table .= pack("V", $flag);
+			$packed_contents .= $packed_chunk;
+		}
 	}
 
 	// Table 2 entry
@@ -182,9 +184,9 @@ $header = "";
 $header .= pack("v", 0xd9ff);            // block magic
 $header .= pack("v", 0x0403);            // block type
 $header .= pack("v", count($fnames));    // files count
-$header .= pack("V", strlen($table2));   // size (todo)
+$header .= pack("V", strlen($table2));   // table 2 size
 $header .= pack("V", $offest2);          // table 2 offest
-$header .= "\\SDMMC\\";                  // source path (?)
+$header .= "\\SDMMC\\";                  // source path
 $header .= pack("v", 0x0007);            // length of source path string
 fwrite($wzp, $header);
 
