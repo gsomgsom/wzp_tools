@@ -39,7 +39,7 @@ if (!file_exists($out_dir)) {
 	mkdir($out_dir, true);
 }
 if (!is_dir($out_dir)) {
-	echo "Error: Can't create directory ".$oud_dir."\n";
+	echo "Error: Can't create directory ".$out_dir."\n";
 }
 
 // Analyze file information
