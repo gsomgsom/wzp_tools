@@ -6,7 +6,7 @@
  * @Contacts: skype: zhelneen
  * @Date: 24 sep 2013
  *
- * @Notes: Compile using BanCompile: http://www.bambalam.se/bamcompile/
+ * @Notes: Compile using BamCompile: http://www.bambalam.se/bamcompile/
  */
 
 // No time limits
