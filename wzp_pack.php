@@ -48,8 +48,8 @@ echo "example: wzp_pack Input out_yfapp.wzp 8 0xCCCCCCCC\n\n";
 $in_dir = isset($argv[1]) ? $argv[1] : "Input";
 
 if (!file_exists($in_dir)) {
-	echo "Error: Can't open directory ".$in_dir."\n";
-	die();
+	fprintf(STDERR, "Error: Can't open directory %s\n", $in_dir);
+	exit(1);
 }
 
 // Check root directory
@@ -57,8 +57,8 @@ if (
 	(!file_exists($in_dir."/YFAPP")) &&
 	(!file_exists($in_dir."/YFAP20")) &&
 	(!file_exists($in_dir."/YFAP30"))) {
-	echo "Error: YFAPP / YFAP20 / YFAP30 root directory is not found in ".$in_dir."\n";
-	die();
+	fprintf(STDERR, "Error: YFAPP / YFAP20 / YFAP30 root directory is not found in %s\n", $in_dir);
+	exit(1);
 }
 
 // WZP file, yfapp.wzp

@@ -21,8 +21,8 @@ $wzp_file = isset($argv[1]) ? $argv[1] : "yfapp.wzp";
 
 // Opening file
 if (!file_exists($wzp_file)) {
-  echo "File \"".$wzp_file."\" not found!\n";
-  exit;
+	fprintf(STDERR, "File: \"%s\" not found!\n", $wzp_file);
+	exit(1);
 }
 $f = file_get_contents($wzp_file);
 
@@ -33,7 +33,8 @@ if (!file_exists($out_dir)) {
 	mkdir($out_dir, 0777, true);
 }
 if (!is_dir($out_dir)) {
-	echo "Error: Can't create directory ".$out_dir."\n";
+	fprintf(STDERR, "Error: Can't create directory %s\n", $out_dir);
+	exit(1);
 }
 
 // Analyze file information
@@ -47,8 +48,8 @@ list(,$offset2) =   unpack('V', substr($header, 10, 4));
 
 // Something goes wrong...
 if ($magic != 0xd9ff) {
-	echo "Error: File signature unknown!\n";
-	die();
+	fprintf(STDERR, "Error: File signature unknown!\n");
+	exit(1);
 }
 
 echo "YFAPP.WZP archive found.\n";
@@ -62,8 +63,8 @@ for ($i = 0; $i < $files; $i++) {
 	// First table
 	list(,$magic) =     unpack('v', substr($f, $offset, 2)); $offset += 2;
 	if ($magic != 0xd8ff) {
-		echo "Error: Invalid block signature (table1)!\n";
-		die();
+		fprintf(STDERR, "Error: Invalid block signature (table1)!\n");
+		exit(1);
 	}
 	list(,$type) =      unpack('v', substr($f, $offset, 2)); $offset += 2;
 	list(,$ver) =       unpack('v', substr($f, $offset, 2)); $offset += 2;
@@ -78,8 +79,8 @@ for ($i = 0; $i < $files; $i++) {
 	// Second table
 	list(,$magic) =     unpack('v', substr($f, $offset2, 2)); $offset2 += 2;
 	if ($magic != 0xd8ff) {
-		echo "Error: Invalid block signature (table2)!\n";
-		die();
+		fprintf(STDERR, "Error: Invalid block signature (table2)!\n");
+		exit(1);
 	}
 	list(,$type) =      unpack('v', substr($f, $offset2, 2)); $offset2 += 2;
 	list(,$ver_made) =  unpack('v', substr($f, $offset2, 2)); $offset2 += 2;
