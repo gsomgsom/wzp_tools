@@ -16,20 +16,19 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // Recursive files list
-function listdir($start_dir = '.') {
-	global $in_dir;
+function listdir($start_dir = '.', $root_dir = null) {
+	if ($root_dir === null) {
+		$root_dir = $start_dir;
+	}
 	$files = array();
 	if (is_dir($start_dir)) {
 		$fh = opendir($start_dir);
 		while (($file = readdir($fh)) !== false) {
-			if ((strcmp($file, '.') == 0) || (strcmp($file, '..') == 0)) continue;
+			if ($file === '.' || $file === '..') continue;
 			$filepath = $start_dir.'/'.$file;
+			array_push($files, substr($filepath, strlen($root_dir) + 1));
 			if (is_dir($filepath)) {
-				array_push($files, str_replace("/", "\\", substr($filepath, strlen($in_dir)+1)."/"));
-				$files = array_merge($files, listdir($filepath));
-			}
-			else {
-				array_push($files, str_replace("/", "\\", substr($filepath, strlen($in_dir)+1)));
+				$files = array_merge($files, listdir($filepath, $root_dir));
 			}
 		}
 		closedir($fh);
@@ -58,9 +57,9 @@ if (!file_exists($in_dir)) {
 
 // Check root directory
 if (
-	(!file_exists($in_dir."\\YFAPP")) &&
-	(!file_exists($in_dir."\\YFAP20")) &&
-	(!file_exists($in_dir."\\YFAP30"))) {
+	(!file_exists($in_dir."/YFAPP")) &&
+	(!file_exists($in_dir."/YFAP20")) &&
+	(!file_exists($in_dir."/YFAP30"))) {
 	echo "Error: YFAPP / YFAP20 / YFAP30 root directory is not found in ".$in_dir."\n";
 	die();
 }
@@ -86,13 +85,13 @@ echo "Pack method (0-9) is: ".$method."\n";
 
 // Define default flag for files (if not specified)
 $flag = 0xCCCCCCCC;
-if (file_exists($in_dir."\\YFAPP")) {
+if (file_exists($in_dir."/YFAPP")) {
 	$flag = 0xCCCCCCCC;
 }
-if (file_exists($in_dir."\\YFAP20")) {
+if (file_exists($in_dir."/YFAP20")) {
 	$flag = 0x0154F4E4;
 }
-if (file_exists($in_dir."\\YFAP30")) {
+if (file_exists($in_dir."/YFAP30")) {
 	$flag = 0x0012D830;
 }
 
@@ -114,34 +113,34 @@ $wzp = fopen($wzp_file, "wb");
 foreach ($fnames as $fname) {
 	echo $fname."\n";
 
-	$contents = "";
 	$packed_contents = "";
+	$prepared_fname = str_replace('/', '\\', $fname);
 
-	$is_file = false;
-	// File
-	if (!(substr($fname, -1, 1) == '\\')) {
-		$contents = file_get_contents($in_dir."\\".$fname);
-		$is_file = true;
+	if (is_dir($in_dir."/".$fname)) {
+		$contents = "";
+		$prepared_fname .= "\\";
+	} else {
+		$contents = file_get_contents($in_dir."/".$fname);
 	}
 
 	// Table 1 entry
 	$entry1 = "";
-	$entry1 .= pack("v", 0xd8ff);            // block magic
-	$entry1 .= pack("v", 0x0403);            // block type
-	$entry1 .= pack("v", 0x000a);            // ver
-	$entry1 .= pack("v", 0x0000);            // flag (unused)
-	$entry1 .= pack("v", $method);           // compression method
-	$entry1 .= pack("v", 0x0000);            // modtime (unused)
-	$entry1 .= pack("v", 0x0000);            // moddate (unused)
-	$entry1 .= pack("V", crc32($contents));  // CRC32 of file
-	$entry1 .= pack("v", strlen($fname));    // length of filename
-	$entry1 .= $fname;
+	$entry1 .= pack("v", 0xd8ff);                   // block magic
+	$entry1 .= pack("v", 0x0403);                   // block type
+	$entry1 .= pack("v", 0x000a);                   // ver
+	$entry1 .= pack("v", 0x0000);                   // flag (unused)
+	$entry1 .= pack("v", $method);                  // compression method
+	$entry1 .= pack("v", 0x0000);                   // modtime (unused)
+	$entry1 .= pack("v", 0x0000);                   // moddate (unused)
+	$entry1 .= pack("V", crc32($contents));         // CRC32 of file
+	$entry1 .= pack("v", strlen($prepared_fname));  // length of filename
+	$entry1 .= $prepared_fname;
 
 	// Chunks table
 	$chunk_size = 1 << 14; // 16384
 	$chunks = 0;
 	$chinks_table = "";
-	if (($is_file) && (strlen($contents))) {
+	if (strlen($contents) > 0) {
 		$chunks = ceil(strlen($contents) / $chunk_size);
 		for ($i = 0; $i < $chunks; $i++) {
 			$unpacked_chunk = substr($contents, $i * $chunk_size, $chunk_size);
@@ -155,18 +154,18 @@ foreach ($fnames as $fname) {
 
 	// Table 2 entry
 	$entry2 = "";
-	$entry2 .= pack("v", 0xd8ff);            // block magic
-	$entry2 .= pack("v", 0x0201);            // block type
-	$entry2 .= pack("v", 0x000a);            // ver_made
-	$entry2 .= pack("v", 0x000a);            // ver_need
-	$entry2 .= pack("v", 0x0000);            // flag (unused)
-	$entry2 .= pack("v", $method);           // compression method
-	$entry2 .= pack("v", 0x0000);            // modtime (unused)
-	$entry2 .= pack("v", 0x0000);            // moddate (unused)
-	$entry2 .= pack("V", crc32($contents));  // CRC32 of file
-	$entry2 .= pack("v", strlen($fname));    // length of filename
-	$entry2 .= pack("V", $chunks);           // chunks count
-	$entry2 .= $fname;
+	$entry2 .= pack("v", 0xd8ff);                   // block magic
+	$entry2 .= pack("v", 0x0201);                   // block type
+	$entry2 .= pack("v", 0x000a);                   // ver_made
+	$entry2 .= pack("v", 0x000a);                   // ver_need
+	$entry2 .= pack("v", 0x0000);                   // flag (unused)
+	$entry2 .= pack("v", $method);                  // compression method
+	$entry2 .= pack("v", 0x0000);                   // modtime (unused)
+	$entry2 .= pack("v", 0x0000);                   // moddate (unused)
+	$entry2 .= pack("V", crc32($contents));         // CRC32 of file
+	$entry2 .= pack("v", strlen($prepared_fname));  // length of filename
+	$entry2 .= pack("V", $chunks);                  // chunks count
+	$entry2 .= $prepared_fname;
 	$entry2 .= $chinks_table;
 
 	$table2 .= $entry2;

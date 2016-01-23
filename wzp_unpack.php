@@ -101,13 +101,15 @@ for ($i = 0; $i < $files; $i++) {
 
 	echo $filename." ";
 
+	$filepath = $out_dir.'/'.str_replace('\\', '/', $filename);
 	// Directory
-	if (substr($filename, -1, 1) == '\\') {
-		if (!file_exists($out_dir."\\".$filename)) {
-			mkdir($out_dir."\\".$filename, true);
+	if (substr($filepath, -1) == '/') {
+		if (!file_exists($filepath)) {
+			mkdir($filepath, 0777, true);
 		}
-		if (!is_dir($out_dir."\\".$filename)) {
-			echo "Error: Can't create directory ".$oud_dir."\\".$filename."\n";
+		if (!is_dir($filepath)) {
+			fprintf(STDERR, "Error: Can't create directory %s\n", $filepath);
+			exit(1);
 		}
 	}
 	// File
@@ -126,10 +128,10 @@ for ($i = 0; $i < $files; $i++) {
 		}
 		echo "CRC: ";
 		echo (crc32($contents) == $crc32) ? "Ok" : "Error";
-		$file = fopen($out_dir."\\".$filename, "wb");
+		$file = fopen($filepath, "wb");
 		fwrite($file, $contents);
 		fclose($file);
 	}
 	echo "\n";
 }
-echo "Done.";
+echo "Done.\n";
