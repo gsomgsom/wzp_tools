@@ -17,10 +17,7 @@ echo "YFAPP.WZP file unpacker by Zhelneen Evgeniy.\n";
 echo "usage: wzp_unpack [yfapp.wzp] [out_dir]\n\n";
 
 // WZP file, yfapp.wzp
-if ($argv[1] == "")
-  $wzp_file = "yfapp.wzp";
-else
-  $wzp_file = $argv[1];
+$wzp_file = isset($argv[1]) ? $argv[1] : "yfapp.wzp";
 
 // Opening file
 if (!file_exists($wzp_file)) {
@@ -30,10 +27,7 @@ if (!file_exists($wzp_file)) {
 $f = file_get_contents($wzp_file);
 
 // Output directory (default is "Unpacked")
-if ($argv[2] == "")
-  $out_dir = "Unpacked";
-else
-  $out_dir = $argv[2];
+$out_dir = isset($argv[2]) ? $argv[2] : "Unpacked";
 
 if (!file_exists($out_dir)) {
 	mkdir($out_dir, true);

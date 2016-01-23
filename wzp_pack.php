@@ -45,10 +45,7 @@ echo "usage: wzp_pack [in_dir] [out_yfapp.wzp] [method] [hex_flag]\n";
 echo "example: wzp_pack Input out_yfapp.wzp 8 0xCCCCCCCC\n\n";
 
 // Input directory (default is "Input")
-if (@$argv[1] == "")
-  $in_dir = "Input";
-else
-  $in_dir = $argv[1];
+$in_dir = isset($argv[1]) ? $argv[1] : "Input";
 
 if (!file_exists($in_dir)) {
 	echo "Error: Can't open directory ".$in_dir."\n";
@@ -65,23 +62,16 @@ if (
 }
 
 // WZP file, yfapp.wzp
-if (@$argv[2] == "")
-  $wzp_file = "out_yfapp.wzp";
-else
-  $wzp_file = $argv[2];
+$wzp_file = isset($argv[2]) ? $argv[2] : "out_yfapp.wzp";
 
 // Clear out file
 if (file_exists($wzp_file)) {
 	unlink($wzp_file);
 }
 
-// Set packing method (0-9)
-$method = 8; // default value
-if (@$argv[3] != "") {
-echo $argv[3];
-	$method = intval($argv[3]);
-}
-echo "Pack method (0-9) is: ".$method."\n";
+// Set packing method (0-9, default is 8)
+$method = isset($argv[3]) ? intval($argv[3]) : 8;
+printf("Pack method (0-9) is: %d\n", $method);
 
 // Define default flag for files (if not specified)
 $flag = 0xCCCCCCCC;
@@ -96,10 +86,10 @@ if (file_exists($in_dir."/YFAP30")) {
 }
 
 // Check flag for files
-if (@$argv[4] != "") {
+if (isset($argv[4])) {
 	$flag = hexdec($argv[4]);
 }
-echo "File attribute flag is: 0x".strtoupper(dechex($flag))."\n";
+printf("File attribute flag is: 0x%08X\n", $flag);
 
 // Make files list
 $fnames = listdir($in_dir);
