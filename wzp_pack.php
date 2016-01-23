@@ -139,15 +139,15 @@ foreach ($fnames as $fname) {
 	// Chunks table
 	$chunk_size = 1 << 14; // 16384
 	$chunks = 0;
-	$chinks_table = "";
+	$chunks_table = "";
 	if (strlen($contents) > 0) {
 		$chunks = ceil(strlen($contents) / $chunk_size);
 		for ($i = 0; $i < $chunks; $i++) {
 			$unpacked_chunk = substr($contents, $i * $chunk_size, $chunk_size);
 			$packed_chunk = gzcompress($unpacked_chunk, $method);
-			$chinks_table .= pack("V", strlen($unpacked_chunk));
-			$chinks_table .= pack("V", strlen($packed_chunk));
-			$chinks_table .= pack("V", $flag);
+			$chunks_table .= pack("V", strlen($unpacked_chunk));
+			$chunks_table .= pack("V", strlen($packed_chunk));
+			$chunks_table .= pack("V", $flag);
 			$packed_contents .= $packed_chunk;
 		}
 	}
@@ -166,7 +166,7 @@ foreach ($fnames as $fname) {
 	$entry2 .= pack("v", strlen($prepared_fname));  // length of filename
 	$entry2 .= pack("V", $chunks);                  // chunks count
 	$entry2 .= $prepared_fname;
-	$entry2 .= $chinks_table;
+	$entry2 .= $chunks_table;
 
 	$table2 .= $entry2;
 
