@@ -30,7 +30,7 @@ $f = file_get_contents($wzp_file);
 $out_dir = isset($argv[2]) ? $argv[2] : "Unpacked";
 
 if (!file_exists($out_dir)) {
-	mkdir($out_dir, true);
+	mkdir($out_dir, 0777, true);
 }
 if (!is_dir($out_dir)) {
 	echo "Error: Can't create directory ".$out_dir."\n";
