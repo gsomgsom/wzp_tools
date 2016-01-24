@@ -17,29 +17,24 @@ echo "YFAPP.WZP file unpacker by Zhelneen Evgeniy.\n";
 echo "usage: wzp_unpack [yfapp.wzp] [out_dir]\n\n";
 
 // WZP file, yfapp.wzp
-if ($argv[1] == "")
-  $wzp_file = "yfapp.wzp";
-else
-  $wzp_file = $argv[1];
+$wzp_file = isset($argv[1]) ? $argv[1] : "yfapp.wzp";
 
 // Opening file
 if (!file_exists($wzp_file)) {
-  echo "File \"".$wzp_file."\" not found!\n";
-  exit;
+	fprintf(STDERR, "File: \"%s\" not found!\n", $wzp_file);
+	exit(1);
 }
 $f = file_get_contents($wzp_file);
 
 // Output directory (default is "Unpacked")
-if ($argv[2] == "")
-  $out_dir = "Unpacked";
-else
-  $out_dir = $argv[2];
+$out_dir = isset($argv[2]) ? $argv[2] : "Unpacked";
 
 if (!file_exists($out_dir)) {
-	mkdir($out_dir, true);
+	mkdir($out_dir, 0777, true);
 }
 if (!is_dir($out_dir)) {
-	echo "Error: Can't create directory ".$out_dir."\n";
+	fprintf(STDERR, "Error: Can't create directory %s\n", $out_dir);
+	exit(1);
 }
 
 // Analyze file information
@@ -53,8 +48,8 @@ list(,$offset2) =   unpack('V', substr($header, 10, 4));
 
 // Something goes wrong...
 if ($magic != 0xd9ff) {
-	echo "Error: File signature unknown!\n";
-	die();
+	fprintf(STDERR, "Error: File signature unknown!\n");
+	exit(1);
 }
 
 echo "YFAPP.WZP archive found.\n";
@@ -68,8 +63,8 @@ for ($i = 0; $i < $files; $i++) {
 	// First table
 	list(,$magic) =     unpack('v', substr($f, $offset, 2)); $offset += 2;
 	if ($magic != 0xd8ff) {
-		echo "Error: Invalid block signature (table1)!\n";
-		die();
+		fprintf(STDERR, "Error: Invalid block signature (table1)!\n");
+		exit(1);
 	}
 	list(,$type) =      unpack('v', substr($f, $offset, 2)); $offset += 2;
 	list(,$ver) =       unpack('v', substr($f, $offset, 2)); $offset += 2;
@@ -84,8 +79,8 @@ for ($i = 0; $i < $files; $i++) {
 	// Second table
 	list(,$magic) =     unpack('v', substr($f, $offset2, 2)); $offset2 += 2;
 	if ($magic != 0xd8ff) {
-		echo "Error: Invalid block signature (table2)!\n";
-		die();
+		fprintf(STDERR, "Error: Invalid block signature (table2)!\n");
+		exit(1);
 	}
 	list(,$type) =      unpack('v', substr($f, $offset2, 2)); $offset2 += 2;
 	list(,$ver_made) =  unpack('v', substr($f, $offset2, 2)); $offset2 += 2;
@@ -101,13 +96,15 @@ for ($i = 0; $i < $files; $i++) {
 
 	echo $filename." ";
 
+	$filepath = $out_dir.'/'.str_replace('\\', '/', $filename);
 	// Directory
-	if (substr($filename, -1, 1) == '\\') {
-		if (!file_exists($out_dir."\\".$filename)) {
-			mkdir($out_dir."\\".$filename, true);
+	if (substr($filepath, -1) == '/') {
+		if (!file_exists($filepath)) {
+			mkdir($filepath, 0777, true);
 		}
-		if (!is_dir($out_dir."\\".$filename)) {
-			echo "Error: Can't create directory ".$oud_dir."\\".$filename."\n";
+		if (!is_dir($filepath)) {
+			fprintf(STDERR, "Error: Can't create directory %s\n", $filepath);
+			exit(1);
 		}
 	}
 	// File
@@ -126,10 +123,10 @@ for ($i = 0; $i < $files; $i++) {
 		}
 		echo "CRC: ";
 		echo (crc32($contents) == $crc32) ? "Ok" : "Error";
-		$file = fopen($out_dir."\\".$filename, "wb");
+		$file = fopen($filepath, "wb");
 		fwrite($file, $contents);
 		fclose($file);
 	}
 	echo "\n";
 }
-echo "Done.";
+echo "Done.\n";
